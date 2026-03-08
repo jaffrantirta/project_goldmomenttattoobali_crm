@@ -130,6 +130,15 @@ export default function InquiryForm() {
                 placeholder="+62 812 3456 7890"
                 className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-colors"
               />
+              <div className="mt-2 flex items-start gap-2 bg-amber-400/10 border border-amber-400/30 rounded-lg px-3 py-2.5">
+                <span className="text-amber-400 text-base leading-none mt-0.5">⚠️</span>
+                <p className="text-amber-300 text-xs leading-relaxed">
+                  Please include your <span className="font-semibold">country code</span> — e.g.{" "}
+                  <span className="font-semibold text-amber-400">+62</span> for Indonesia,{" "}
+                  <span className="font-semibold text-amber-400">+1</span> for US/Canada,{" "}
+                  <span className="font-semibold text-amber-400">+61</span> for Australia.
+                </p>
+              </div>
             </div>
 
             {/* How did you hear about us */}
