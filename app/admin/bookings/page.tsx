@@ -123,6 +123,7 @@ export default function BookingsPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | BookingStatus>(
     "all",
   );
+  const [sourceFilter, setSourceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -130,6 +131,11 @@ export default function BookingsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState<BookingForm>(emptyForm);
   const [createLoading, setCreateLoading] = useState(false);
+  const [editBooking, setEditBooking] = useState<Booking | null>(null);
+  const [editForm, setEditForm] = useState<BookingForm>(emptyForm);
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -159,7 +165,7 @@ export default function BookingsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, dateFrom, dateTo]);
+  }, [search, statusFilter, sourceFilter, dateFrom, dateTo]);
 
   async function updateStatus(id: string, booking_status: BookingStatus) {
     try {
@@ -175,6 +181,64 @@ export default function BookingsPage() {
       showToast("Booking status updated", "success");
     } catch {
       showToast("Failed to update status", "error");
+    }
+  }
+
+  function openEdit(booking: Booking) {
+    setEditBooking(booking);
+    setEditForm({
+      client_name: booking.client_name,
+      whatsapp: booking.whatsapp,
+      source: booking.source ?? "",
+      booking_date: booking.booking_date ?? "",
+      tattoo_description: booking.tattoo_description ?? "",
+      deposit_amount: booking.deposit_amount != null ? String(booking.deposit_amount) : "",
+      notes: booking.notes ?? "",
+    });
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editBooking) return;
+    setEditLoading(true);
+    try {
+      const res = await fetch(`/api/bookings/${editBooking.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_name: editForm.client_name,
+          whatsapp: editForm.whatsapp,
+          source: editForm.source || null,
+          booking_date: editForm.booking_date || null,
+          tattoo_description: editForm.tattoo_description || null,
+          deposit_amount: editForm.deposit_amount ? Number(editForm.deposit_amount) : null,
+          notes: editForm.notes || null,
+          booking_status: editBooking.booking_status,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      showToast("Booking updated", "success");
+      setEditBooking(null);
+      fetchBookings();
+    } catch {
+      showToast("Failed to update booking", "error");
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+      showToast("Booking deleted", "success");
+    } catch {
+      showToast("Failed to delete booking", "error");
+    } finally {
+      setDeleteLoading(false);
+      setDeleteId(null);
     }
   }
 
@@ -212,18 +276,21 @@ export default function BookingsPage() {
   function clearFilters() {
     setSearch("");
     setStatusFilter("all");
+    setSourceFilter("");
     setDateFrom("");
     setDateTo("");
   }
 
   const hasActiveFilters =
-    search.trim() || statusFilter !== "all" || dateFrom || dateTo;
+    search.trim() || statusFilter !== "all" || sourceFilter || dateFrom || dateTo;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return bookings.filter((b) => {
       if (statusFilter !== "all" && b.booking_status !== statusFilter)
         return false;
+
+      if (sourceFilter && (b.source ?? "") !== sourceFilter) return false;
 
       if (q) {
         const nameMatch = b.client_name.toLowerCase().includes(q);
@@ -246,7 +313,7 @@ export default function BookingsPage() {
 
       return true;
     });
-  }, [bookings, statusFilter, search, dateFrom, dateTo]);
+  }, [bookings, statusFilter, sourceFilter, search, dateFrom, dateTo]);
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -402,6 +469,20 @@ export default function BookingsPage() {
               className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 transition-colors"
             />
           </div>
+
+          {/* Source dropdown */}
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+          >
+            <option value="">All Sources</option>
+            {SOURCE_OPTIONS.filter((o) => o.value !== "").map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
 
           {/* Status pills */}
           <div className="flex gap-1.5 flex-wrap">
@@ -571,6 +652,18 @@ export default function BookingsPage() {
                               Restore
                             </button>
                           )}
+                          <button
+                            onClick={() => openEdit(booking)}
+                            className="px-2 py-1 rounded-lg text-xs font-medium bg-zinc-700/50 text-zinc-300 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(booking.id)}
+                            className="px-2 py-1 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -587,6 +680,149 @@ export default function BookingsPage() {
           </>
         )}
       </div>
+
+      {/* Edit Booking Modal */}
+      {editBooking && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4 py-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg max-h-full overflow-y-auto">
+            <div className="p-6 border-b border-zinc-800">
+              <h2 className="text-white font-bold text-lg">Edit Booking</h2>
+              <p className="text-zinc-500 text-sm mt-1">{editBooking.client_name}</p>
+            </div>
+            <form onSubmit={handleEdit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Client Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.client_name}
+                    onChange={(e) => setEditForm({ ...editForm, client_name: e.target.value })}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">WhatsApp *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.whatsapp}
+                    onChange={(e) => setEditForm({ ...editForm, whatsapp: e.target.value })}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Source</label>
+                  <select
+                    value={editForm.source}
+                    onChange={(e) => setEditForm({ ...editForm, source: e.target.value })}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  >
+                    {SOURCE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Booking Date</label>
+                  <input
+                    type="date"
+                    value={editForm.booking_date}
+                    onChange={(e) => setEditForm({ ...editForm, booking_date: e.target.value })}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Status</label>
+                <select
+                  value={editBooking.booking_status}
+                  onChange={(e) => setEditBooking({ ...editBooking, booking_status: e.target.value as BookingStatus })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                >
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tattoo Description</label>
+                <textarea
+                  value={editForm.tattoo_description}
+                  onChange={(e) => setEditForm({ ...editForm, tattoo_description: e.target.value })}
+                  rows={2}
+                  placeholder="Style, placement, size..."
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Deposit (Rp)</label>
+                <input
+                  type="number"
+                  value={editForm.deposit_amount}
+                  onChange={(e) => setEditForm({ ...editForm, deposit_amount: e.target.value })}
+                  placeholder="500000"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Notes</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditBooking(null)}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-amber-400 hover:bg-amber-500 disabled:bg-amber-400/50 text-zinc-900 transition-colors disabled:cursor-not-allowed"
+                >
+                  {editLoading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-6">
+            <h2 className="text-white font-bold text-lg mb-2">Delete Booking</h2>
+            <p className="text-zinc-400 text-sm mb-6">
+              Are you sure you want to delete this booking? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteId)}
+                disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white transition-colors disabled:cursor-not-allowed"
+              >
+                {deleteLoading ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Booking Modal */}
       {showCreate && (
