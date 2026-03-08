@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import logo from "../logo.webp";
 
 type ReferralSource = "google" | "instagram" | "friend" | "tour_guide";
 
@@ -89,14 +91,9 @@ export default function EmbedForm() {
       <div className="w-full max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-400/10 border border-amber-400/30 mb-4">
-            <svg className="w-7 h-7 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
+          <div className="flex justify-center mb-4">
+            <Image src={logo} alt="Gold Moment Tattoo Bali" className="h-20 w-auto object-contain rounded-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">Gold Moment</h1>
-          <p className="text-amber-400 text-xs font-medium tracking-widest uppercase">Tattoo Bali</p>
           <p className="text-zinc-400 mt-2 text-sm">
             Fill in the form below and we will reach out to you on WhatsApp.
           </p>

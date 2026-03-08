@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendWhatsAppNotification, buildInquiryNotification } from '@/lib/whatsapp'
+import { sendWhatsAppNotification, sendWhatsAppGroupNotification, buildInquiryNotification, buildInquiryGroupNotification } from '@/lib/whatsapp'
 
 export async function GET() {
   try {
@@ -64,9 +64,12 @@ export async function POST(request: NextRequest) {
       new_data: { name, whatsapp, referral_source },
     })
 
-    // Send WhatsApp notification (non-blocking)
+    // Send WhatsApp notifications (non-blocking)
     const message = buildInquiryNotification({ name, whatsapp, referral_source })
     sendWhatsAppNotification(message).catch(console.error)
+
+    const groupMessage = buildInquiryGroupNotification({ name, whatsapp, referral_source })
+    sendWhatsAppGroupNotification(groupMessage).catch(console.error)
 
     return NextResponse.json({ inquiry }, { status: 201 })
   } catch (err) {

@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import logo from '../logo.webp'
 
 const navItems = [
   {
@@ -64,18 +66,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={`flex flex-col h-full ${mobile ? '' : ''}`}>
       {/* Logo */}
-      <div className="px-6 py-6 border-b border-zinc-800">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-white font-semibold text-sm leading-tight">Gold Moment</p>
-            <p className="text-amber-400 text-xs">Tattoo Bali — CRM</p>
-          </div>
-        </div>
+      <div className="px-5 py-5 border-b border-zinc-800">
+        <Image src={logo} alt="Gold Moment Tattoo Bali" className="h-12 w-auto object-contain rounded-2xl" />
+        <p className="text-amber-400 text-xs mt-2 font-medium tracking-widest uppercase">CRM Dashboard</p>
       </div>
 
       {/* Nav */}
@@ -152,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <p className="text-white font-semibold text-sm">Gold Moment CRM</p>
+          <Image src={logo} alt="Gold Moment Tattoo Bali" className="h-8 w-auto object-contain rounded-xl" />
         </header>
 
         {/* Page content */}

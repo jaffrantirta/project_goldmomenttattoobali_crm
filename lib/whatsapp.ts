@@ -1,29 +1,27 @@
-export async function sendWhatsAppNotification(
-  message: string,
-): Promise<boolean> {
-  const token = process.env.WA_API_TOKEN;
-  const groupId = process.env.WA_GROUP_ID;
-  const apiUrl = process.env.WA_API_URL || "https://api.fonnte.com/send";
+async function sendMessage(phone: string, message: string): Promise<boolean> {
+  const apiUrl = process.env.WA_API_URL;
+  const username = process.env.WA_USERNAME;
+  const password = process.env.WA_PASSWORD;
 
-  if (!token || !groupId) {
+  if (!apiUrl || !username || !password) {
     console.warn(
-      "WhatsApp not configured: WA_API_TOKEN or WA_GROUP_ID missing",
+      "WhatsApp not configured: WA_API_URL, WA_USERNAME, or WA_PASSWORD missing",
     );
     return false;
   }
 
   try {
-    const response = await fetch(apiUrl, {
+    const credentials = Buffer.from(`${username}:${password}`).toString(
+      "base64",
+    );
+
+    const response = await fetch(`${apiUrl}/send/message`, {
       method: "POST",
       headers: {
-        Authorization: token,
+        Authorization: `Basic ${credentials}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        target: groupId,
-        message,
-        countryCode: "62",
-      }),
+      body: JSON.stringify({ phone, message }),
     });
 
     if (!response.ok) {
@@ -40,6 +38,49 @@ export async function sendWhatsAppNotification(
     console.error("WhatsApp send failed:", error);
     return false;
   }
+}
+
+export async function sendWhatsAppNotification(
+  message: string,
+): Promise<boolean> {
+  const phone = process.env.WA_NUMBER;
+  if (!phone) {
+    console.warn("WhatsApp not configured: WA_NUMBER missing");
+    return false;
+  }
+  return sendMessage(phone, message);
+}
+
+export async function sendWhatsAppGroupNotification(
+  message: string,
+): Promise<boolean> {
+  const groupId = process.env.WA_GROUP_ID;
+  if (!groupId) {
+    console.warn("WhatsApp group not configured: WA_GROUP_ID missing");
+    return false;
+  }
+  return sendMessage(groupId, message);
+}
+
+export function buildInquiryGroupNotification(data: {
+  name: string;
+  whatsapp: string;
+  referral_source: string;
+}): string {
+  const referralLabels: Record<string, string> = {
+    google: "Google",
+    instagram: "Instagram",
+    friend: "Friend",
+    tour_guide: "Tour Guide",
+  };
+
+  const source = referralLabels[data.referral_source] || data.referral_source;
+
+  return `Ada tamu yang bertanya 🙏
+
+Nama: *${data.name}*
+Phone: ${data.whatsapp}
+Sumber: ${source}`;
 }
 
 export function buildInquiryNotification(data: {
