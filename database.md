@@ -34,7 +34,6 @@ create table public.bookings (
   booking_date      date,
   tattoo_description text,
   deposit_amount    numeric(12,2),
-  total_amount      numeric(12,2),
   booking_status    text        not null default 'confirmed' check (booking_status in ('confirmed', 'completed', 'cancelled')),
   notes             text,
   created_at        timestamptz default now() not null,

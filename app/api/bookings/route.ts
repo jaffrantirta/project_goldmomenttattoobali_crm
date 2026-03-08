@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
       booking_date,
       tattoo_description,
       deposit_amount,
-      total_amount,
       notes,
     } = body
 
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
         booking_date: booking_date || null,
         tattoo_description: tattoo_description || null,
         deposit_amount: deposit_amount || null,
-        total_amount: total_amount || null,
         notes: notes || null,
       })
       .select()
@@ -88,7 +86,6 @@ export async function POST(request: NextRequest) {
       booking_date,
       tattoo_description,
       deposit_amount,
-      total_amount,
     })
     sendWhatsAppNotification(message).catch(console.error)
 

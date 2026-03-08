@@ -22,7 +22,6 @@ export interface Booking {
   booking_date: string | null
   tattoo_description: string | null
   deposit_amount: number | null
-  total_amount: number | null
   booking_status: BookingStatus
   notes: string | null
   created_at: string

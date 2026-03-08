@@ -71,7 +71,6 @@ export function buildBookingNotification(data: {
   booking_date?: string | null
   tattoo_description?: string | null
   deposit_amount?: number | null
-  total_amount?: number | null
 }): string {
   const lines = [
     `*BOOKING CONFIRMED - Gold Moment Tattoo Bali*`,
@@ -88,9 +87,6 @@ export function buildBookingNotification(data: {
   }
   if (data.deposit_amount != null) {
     lines.push(`Deposit: Rp ${data.deposit_amount.toLocaleString('id-ID')}`)
-  }
-  if (data.total_amount != null) {
-    lines.push(`Total: Rp ${data.total_amount.toLocaleString('id-ID')}`)
   }
 
   return lines.join('\n')

@@ -3,10 +3,31 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Booking, BOOKING_STATUS_LABELS, BookingStatus } from '@/types'
 
+interface BookingForm {
+  client_name: string
+  whatsapp: string
+  booking_date: string
+  tattoo_description: string
+  deposit_amount: string
+  notes: string
+}
+
+const emptyForm: BookingForm = {
+  client_name: '',
+  whatsapp: '',
+  booking_date: '',
+  tattoo_description: '',
+  deposit_amount: '',
+  notes: '',
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | BookingStatus>('all')
+  const [showCreate, setShowCreate] = useState(false)
+  const [form, setForm] = useState<BookingForm>(emptyForm)
+  const [createLoading, setCreateLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   function showToast(message: string, type: 'success' | 'error') {
@@ -44,6 +65,34 @@ export default function BookingsPage() {
       showToast('Booking status updated', 'success')
     } catch {
       showToast('Failed to update status', 'error')
+    }
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setCreateLoading(true)
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name: form.client_name,
+          whatsapp: form.whatsapp,
+          booking_date: form.booking_date || null,
+          tattoo_description: form.tattoo_description || null,
+          deposit_amount: form.deposit_amount ? Number(form.deposit_amount) : null,
+          notes: form.notes || null,
+        }),
+      })
+      if (!res.ok) throw new Error()
+      showToast('Booking created', 'success')
+      setShowCreate(false)
+      setForm(emptyForm)
+      fetchBookings()
+    } catch {
+      showToast('Failed to create booking', 'error')
+    } finally {
+      setCreateLoading(false)
     }
   }
 
@@ -90,9 +139,20 @@ export default function BookingsPage() {
         </div>
       )}
 
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-white">Bookings</h1>
-        <p className="text-zinc-500 text-sm mt-1">Track and manage all confirmed bookings</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-white">Bookings</h1>
+          <p className="text-zinc-500 text-sm mt-1">Track and manage all confirmed bookings</p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-500 text-zinc-900 text-sm font-medium transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Booking
+        </button>
       </div>
 
       {/* Stats */}
@@ -145,7 +205,6 @@ export default function BookingsPage() {
                   <th className="px-4 py-3 text-left hidden md:table-cell">Booking Date</th>
                   <th className="px-4 py-3 text-left hidden lg:table-cell">Tattoo</th>
                   <th className="px-4 py-3 text-left hidden sm:table-cell">Deposit</th>
-                  <th className="px-4 py-3 text-left hidden sm:table-cell">Total</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -172,9 +231,6 @@ export default function BookingsPage() {
                     </td>
                     <td className="px-4 py-3 text-zinc-400 hidden sm:table-cell">
                       {formatCurrency(booking.deposit_amount)}
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 hidden sm:table-cell">
-                      {formatCurrency(booking.total_amount)}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusColors[booking.booking_status]}`}>
@@ -216,6 +272,102 @@ export default function BookingsPage() {
           </div>
         )}
       </div>
+
+      {/* Create Booking Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4 py-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg max-h-full overflow-y-auto">
+            <div className="p-6 border-b border-zinc-800">
+              <h2 className="text-white font-bold text-lg">Add Booking</h2>
+              <p className="text-zinc-500 text-sm mt-1">Manually add a new booking</p>
+            </div>
+            <form onSubmit={handleCreate} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Client Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.client_name}
+                    onChange={(e) => setForm({ ...form, client_name: e.target.value })}
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">WhatsApp *</label>
+                  <input
+                    type="text"
+                    required
+                    value={form.whatsapp}
+                    onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                    placeholder="+62 812 3456 7890"
+                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Booking Date</label>
+                <input
+                  type="date"
+                  value={form.booking_date}
+                  onChange={(e) => setForm({ ...form, booking_date: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tattoo Description</label>
+                <textarea
+                  value={form.tattoo_description}
+                  onChange={(e) => setForm({ ...form, tattoo_description: e.target.value })}
+                  rows={2}
+                  placeholder="Style, placement, size..."
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Deposit (Rp)</label>
+                <input
+                  type="number"
+                  value={form.deposit_amount}
+                  onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })}
+                  placeholder="500000"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Notes</label>
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={2}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowCreate(false); setForm(emptyForm) }}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium bg-amber-400 hover:bg-amber-500 disabled:bg-amber-400/50 text-zinc-900 transition-colors disabled:cursor-not-allowed"
+                >
+                  {createLoading ? 'Creating...' : 'Create Booking'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -9,7 +9,6 @@ interface BookingForm {
   booking_date: string
   tattoo_description: string
   deposit_amount: string
-  total_amount: string
   notes: string
 }
 
@@ -24,7 +23,6 @@ export default function DashboardPage() {
     booking_date: '',
     tattoo_description: '',
     deposit_amount: '',
-    total_amount: '',
     notes: '',
   })
   const [bookingLoading, setBookingLoading] = useState(false)
@@ -77,7 +75,6 @@ export default function DashboardPage() {
       booking_date: '',
       tattoo_description: '',
       deposit_amount: '',
-      total_amount: '',
       notes: '',
     })
   }
@@ -97,7 +94,6 @@ export default function DashboardPage() {
           booking_date: bookingForm.booking_date || null,
           tattoo_description: bookingForm.tattoo_description || null,
           deposit_amount: bookingForm.deposit_amount ? Number(bookingForm.deposit_amount) : null,
-          total_amount: bookingForm.total_amount ? Number(bookingForm.total_amount) : null,
           notes: bookingForm.notes || null,
         }),
       })
@@ -307,27 +303,15 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Deposit (Rp)</label>
-                  <input
-                    type="number"
-                    value={bookingForm.deposit_amount}
-                    onChange={(e) => setBookingForm({ ...bookingForm, deposit_amount: e.target.value })}
-                    placeholder="500000"
-                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Total (Rp)</label>
-                  <input
-                    type="number"
-                    value={bookingForm.total_amount}
-                    onChange={(e) => setBookingForm({ ...bookingForm, total_amount: e.target.value })}
-                    placeholder="2000000"
-                    className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Deposit (Rp)</label>
+                <input
+                  type="number"
+                  value={bookingForm.deposit_amount}
+                  onChange={(e) => setBookingForm({ ...bookingForm, deposit_amount: e.target.value })}
+                  placeholder="500000"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
               </div>
 
               <div>
