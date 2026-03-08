@@ -31,6 +31,7 @@ create table public.bookings (
   inquiry_id        uuid        references public.inquiries(id) on delete set null,
   client_name       text        not null,
   whatsapp          text        not null,
+  source            text,
   booking_date      date,
   tattoo_description text,
   deposit_amount    numeric(12,2),
@@ -147,6 +148,15 @@ create policy "Admins can view audit logs"
 
 ---
 
+## Migration: Add source column to bookings (if table already exists)
+
+```sql
+alter table public.bookings add column if not exists source text;
+alter table public.bookings drop column if exists total_amount;
+```
+
+---
+
 ## Tables Summary
 
 | Table | Purpose |
@@ -162,7 +172,7 @@ create policy "Admins can view audit logs"
 |-------|---------|
 | `google` | Google |
 | `instagram` | Instagram |
-| `friend` | Friend / Referral |
+| `friend` | Friend |
 | `tour_guide` | Tour Guide |
 
 ## Inquiry Statuses

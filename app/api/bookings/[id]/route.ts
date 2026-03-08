@@ -20,7 +20,7 @@ export async function PATCH(
     if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { booking_status, notes, booking_date, deposit_amount, tattoo_description } = body
+    const { booking_status, notes, booking_date, deposit_amount, tattoo_description, source } = body
 
     const { data: oldBooking } = await service.from('bookings').select('*').eq('id', id).single()
     if (!oldBooking) return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
@@ -31,6 +31,7 @@ export async function PATCH(
     if (booking_date !== undefined) updates.booking_date = booking_date
     if (deposit_amount !== undefined) updates.deposit_amount = deposit_amount
     if (tattoo_description !== undefined) updates.tattoo_description = tattoo_description
+    if (source !== undefined) updates.source = source
 
     const { data: booking, error } = await service
       .from('bookings')
