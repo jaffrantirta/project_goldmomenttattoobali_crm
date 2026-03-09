@@ -15,7 +15,7 @@ const SOURCE_OPTIONS = [
   { value: "google", label: "Google" },
   { value: "instagram", label: "Instagram" },
   { value: "friend", label: "Friend" },
-  { value: "tour_guide", label: "Tour Guide" },
+  { value: "driver", label: "Driver" },
   { value: "walk_in", label: "Walk-in" },
   { value: "direct", label: "Direct" },
 ];
@@ -138,6 +138,7 @@ export default function BookingsPage() {
   const [editLoading, setEditLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -195,7 +196,8 @@ export default function BookingsPage() {
       booking_date: booking.booking_date ?? "",
       booking_end_date: booking.booking_end_date ?? "",
       tattoo_description: booking.tattoo_description ?? "",
-      deposit_amount: booking.deposit_amount != null ? String(booking.deposit_amount) : "",
+      deposit_amount:
+        booking.deposit_amount != null ? String(booking.deposit_amount) : "",
       notes: booking.notes ?? "",
     });
   }
@@ -215,7 +217,9 @@ export default function BookingsPage() {
           booking_date: editForm.booking_date || null,
           booking_end_date: editForm.booking_end_date || null,
           tattoo_description: editForm.tattoo_description || null,
-          deposit_amount: editForm.deposit_amount ? Number(editForm.deposit_amount) : null,
+          deposit_amount: editForm.deposit_amount
+            ? Number(editForm.deposit_amount)
+            : null,
           notes: editForm.notes || null,
           booking_status: editBooking.booking_status,
         }),
@@ -287,7 +291,11 @@ export default function BookingsPage() {
   }
 
   const hasActiveFilters =
-    search.trim() || statusFilter !== "all" || sourceFilter || dateFrom || dateTo;
+    search.trim() ||
+    statusFilter !== "all" ||
+    sourceFilter ||
+    dateFrom ||
+    dateTo;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -321,7 +329,18 @@ export default function BookingsPage() {
     });
   }, [bookings, statusFilter, sourceFilter, search, dateFrom, dateTo]);
 
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const da = a.booking_date ?? "";
+      const db = b.booking_date ?? "";
+      if (da === db) return 0;
+      if (da === "") return 1;
+      if (db === "") return -1;
+      return sortOrder === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+  }, [filtered, sortOrder]);
+
+  const paginated = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const stats = {
     total: bookings.length,
@@ -573,16 +592,27 @@ export default function BookingsPage() {
                   <tr className="border-b border-zinc-800 text-zinc-500 text-xs uppercase tracking-wide">
                     <th className="px-4 py-3 text-left">Client</th>
                     <th className="px-4 py-3 text-left">WhatsApp</th>
-                    <th className="px-4 py-3 text-left hidden sm:table-cell">
+                    <th className="px-4 py-3 text-left">
                       Source
                     </th>
-                    <th className="px-4 py-3 text-left hidden md:table-cell">
-                      Booking Date
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={() => {
+                          setSortOrder((o) => (o === "asc" ? "desc" : "asc"));
+                          setPage(1);
+                        }}
+                        className="flex items-center gap-1 hover:text-white transition-colors"
+                      >
+                        Booking Date
+                        <span className="text-amber-400">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      </button>
                     </th>
-                    <th className="px-4 py-3 text-left hidden lg:table-cell">
+                    <th className="px-4 py-3 text-left">
                       Tattoo
                     </th>
-                    <th className="px-4 py-3 text-left hidden sm:table-cell">
+                    <th className="px-4 py-3 text-left">
                       Deposit
                     </th>
                     <th className="px-4 py-3 text-left">Status</th>
@@ -596,9 +626,13 @@ export default function BookingsPage() {
                       className="hover:bg-zinc-800/50 transition-colors"
                     >
                       <td className="px-4 py-3">
-                        <p className="text-white font-medium">{booking.client_name}</p>
+                        <p className="text-white font-medium">
+                          {booking.client_name}
+                        </p>
                         {booking.notes && (
-                          <p className="text-zinc-500 text-xs mt-0.5 truncate max-w-45">{booking.notes}</p>
+                          <p className="text-zinc-500 text-xs mt-0.5 truncate max-w-45">
+                            {booking.notes}
+                          </p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -611,18 +645,21 @@ export default function BookingsPage() {
                           {booking.whatsapp}
                         </a>
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 hidden sm:table-cell">
+                      <td className="px-4 py-3 text-zinc-400">
                         {booking.source
                           ? (SOURCE_LABELS[booking.source] ?? booking.source)
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 hidden md:table-cell whitespace-nowrap">
-                        {formatDateRange(booking.booking_date, booking.booking_end_date)}
+                      <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">
+                        {formatDateRange(
+                          booking.booking_date,
+                          booking.booking_end_date,
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 max-w-40 truncate hidden lg:table-cell">
+                      <td className="px-4 py-3 text-zinc-400 max-w-40 truncate">
                         {booking.tattoo_description || "—"}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 hidden sm:table-cell">
+                      <td className="px-4 py-3 text-zinc-400">
                         {formatCurrency(booking.deposit_amount)}
                       </td>
                       <td className="px-4 py-3">
@@ -699,69 +736,106 @@ export default function BookingsPage() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg max-h-full overflow-y-auto">
             <div className="p-6 border-b border-zinc-800">
               <h2 className="text-white font-bold text-lg">Edit Booking</h2>
-              <p className="text-zinc-500 text-sm mt-1">{editBooking.client_name}</p>
+              <p className="text-zinc-500 text-sm mt-1">
+                {editBooking.client_name}
+              </p>
             </div>
             <form onSubmit={handleEdit} className="p-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Client Name *</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    Client Name *
+                  </label>
                   <input
                     type="text"
                     required
                     value={editForm.client_name}
-                    onChange={(e) => setEditForm({ ...editForm, client_name: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, client_name: e.target.value })
+                    }
                     className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">WhatsApp *</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    WhatsApp *
+                  </label>
                   <input
                     type="text"
                     required
                     value={editForm.whatsapp}
-                    onChange={(e) => setEditForm({ ...editForm, whatsapp: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, whatsapp: e.target.value })
+                    }
                     className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Source</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    Source
+                  </label>
                   <select
                     value={editForm.source}
-                    onChange={(e) => setEditForm({ ...editForm, source: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, source: e.target.value })
+                    }
                     className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   >
                     {SOURCE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Start Date</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     value={editForm.booking_date}
-                    onChange={(e) => setEditForm({ ...editForm, booking_date: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, booking_date: e.target.value })
+                    }
                     className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">End Date <span className="text-zinc-600">(leave blank for single-day)</span></label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  End Date{" "}
+                  <span className="text-zinc-600">
+                    (leave blank for single-day)
+                  </span>
+                </label>
                 <input
                   type="date"
                   value={editForm.booking_end_date}
                   min={editForm.booking_date || undefined}
-                  onChange={(e) => setEditForm({ ...editForm, booking_end_date: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      booking_end_date: e.target.value,
+                    })
+                  }
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Status</label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Status
+                </label>
                 <select
                   value={editBooking.booking_status}
-                  onChange={(e) => setEditBooking({ ...editBooking, booking_status: e.target.value as BookingStatus })}
+                  onChange={(e) =>
+                    setEditBooking({
+                      ...editBooking,
+                      booking_status: e.target.value as BookingStatus,
+                    })
+                  }
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 >
                   <option value="confirmed">Confirmed</option>
@@ -770,30 +844,45 @@ export default function BookingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tattoo Description</label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Tattoo Description
+                </label>
                 <textarea
                   value={editForm.tattoo_description}
-                  onChange={(e) => setEditForm({ ...editForm, tattoo_description: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      tattoo_description: e.target.value,
+                    })
+                  }
                   rows={2}
                   placeholder="Style, placement, size..."
                   className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Deposit (Rp)</label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Deposit (Rp)
+                </label>
                 <input
                   type="number"
                   value={editForm.deposit_amount}
-                  onChange={(e) => setEditForm({ ...editForm, deposit_amount: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, deposit_amount: e.target.value })
+                  }
                   placeholder="500000"
                   className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Notes</label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  Notes
+                </label>
                 <textarea
                   value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, notes: e.target.value })
+                  }
                   rows={2}
                   className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors resize-none"
                 />
@@ -823,9 +912,12 @@ export default function BookingsPage() {
       {deleteId && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-6">
-            <h2 className="text-white font-bold text-lg mb-2">Delete Booking</h2>
+            <h2 className="text-white font-bold text-lg mb-2">
+              Delete Booking
+            </h2>
             <p className="text-zinc-400 text-sm mb-6">
-              Are you sure you want to delete this booking? This action cannot be undone.
+              Are you sure you want to delete this booking? This action cannot
+              be undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -926,7 +1018,9 @@ export default function BookingsPage() {
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">
                   End Date{" "}
-                  <span className="text-zinc-600">(leave blank for single-day)</span>
+                  <span className="text-zinc-600">
+                    (leave blank for single-day)
+                  </span>
                 </label>
                 <input
                   type="date"
