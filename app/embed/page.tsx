@@ -50,11 +50,14 @@ export default function EmbedForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Submission failed");
       }
       setSubmitted(true);
+      if (data.wa_url) {
+        window.open(data.wa_url, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
       setError(
         err instanceof Error

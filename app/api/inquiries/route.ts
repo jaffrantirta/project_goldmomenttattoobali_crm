@@ -71,7 +71,17 @@ export async function POST(request: NextRequest) {
     const groupMessage = buildInquiryGroupNotification({ name, whatsapp, referral_source })
     sendWhatsAppGroupNotification(groupMessage).catch(console.error)
 
-    return NextResponse.json({ inquiry }, { status: 201 })
+    // Build WhatsApp deep-link so client can open a chat to the contact person
+    const contactNumber = (process.env.WA_CONTACT_PERSON ?? '').replace(/\D/g, '')
+    const referralLabels: Record<string, string> = {
+      google: 'Google', instagram: 'Instagram', friend: 'Friend', tour_guide: 'Tour Guide',
+    }
+    const waText = encodeURIComponent(
+      `Hello Gold Moment Tattoo Bali! 👋\n\nMy name is *${name}*.\nI found you through: ${referralLabels[referral_source] ?? referral_source}\n\nI'd love to inquire about getting a tattoo. 🙏`
+    )
+    const wa_url = contactNumber ? `https://wa.me/${contactNumber}?text=${waText}` : null
+
+    return NextResponse.json({ inquiry, wa_url }, { status: 201 })
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
