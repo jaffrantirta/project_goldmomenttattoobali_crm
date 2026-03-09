@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Allow /embed to be iframed from any origin
-        source: "/embed",
+        // Allow /book to be iframed from any origin
+        source: "/book",
         headers: [
           {
             key: "Content-Security-Policy",

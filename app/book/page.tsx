@@ -3,8 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import logo from "../logo.webp";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGoogle, faInstagram, faFacebook } from "@fortawesome/free-brands-svg-icons";
+import { faCar } from "@fortawesome/free-solid-svg-icons";
 
-type ReferralSource = "google" | "instagram" | "friend" | "tour_guide";
+type ReferralSource = "google" | "instagram" | "driver" | "facebook";
 
 interface FormData {
   name: string;
@@ -71,18 +74,34 @@ export default function EmbedForm() {
 
   if (submitted) {
     return (
-      <div ref={containerRef} className="bg-zinc-950 flex items-center justify-center px-4 py-12">
+      <div
+        ref={containerRef}
+        className="bg-zinc-950 flex items-center justify-center px-4 py-12"
+      >
         <div className="text-center max-w-md w-full">
           <div className="w-20 h-20 rounded-full bg-amber-400/10 border-2 border-amber-400 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-10 h-10 text-amber-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Thank You!</h2>
           <p className="text-zinc-400 leading-relaxed">
-            We have received your inquiry and will contact you via WhatsApp shortly.
-            <br /><br />
-            <span className="text-amber-400">Gold Moment Tattoo Bali</span> — We look forward to creating something beautiful with you.
+            We have received your inquiry and will contact you via WhatsApp
+            shortly.
+            <br />
+            <br />
+            <span className="text-amber-400">Gold Moment Tattoo Bali</span> — We
+            look forward to creating something beautiful with you.
           </p>
         </div>
       </div>
@@ -95,7 +114,11 @@ export default function EmbedForm() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Image src={logo} alt="Gold Moment Tattoo Bali" className="h-20 w-auto object-contain rounded-2xl" />
+            <Image
+              src={logo}
+              alt="Gold Moment Tattoo Bali"
+              className="h-20 w-auto object-contain rounded-2xl"
+            />
           </div>
           <p className="text-zinc-400 mt-2 text-sm">
             Fill in the form below and we will reach out to you on WhatsApp.
@@ -132,29 +155,36 @@ export default function EmbedForm() {
                 className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-colors"
               />
               <div className="mt-2 flex items-start gap-2 bg-amber-400/10 border border-amber-400/30 rounded-lg px-3 py-2.5">
-                <span className="text-amber-400 text-base leading-none mt-0.5">⚠️</span>
+                <span className="text-amber-400 text-base leading-none mt-0.5">
+                  ⚠️
+                </span>
                 <p className="text-amber-300 text-xs leading-relaxed">
-                  Please include your <span className="font-semibold">country code</span> — e.g.{" "}
-                  <span className="font-semibold text-amber-400">+62</span> for Indonesia,{" "}
-                  <span className="font-semibold text-amber-400">+1</span> for US/Canada,{" "}
-                  <span className="font-semibold text-amber-400">+61</span> for Australia.
+                  Please include your{" "}
+                  <span className="font-semibold">country code</span> — e.g.{" "}
+                  <span className="font-semibold text-amber-400">+62</span> for
+                  Indonesia,{" "}
+                  <span className="font-semibold text-amber-400">+1</span> for
+                  US/Canada,{" "}
+                  <span className="font-semibold text-amber-400">+61</span> for
+                  Australia.
                 </p>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-3">
-                How did you hear about us? <span className="text-amber-400">*</span>
+                How did you hear about us?{" "}
+                <span className="text-amber-400">*</span>
               </label>
               <div className="grid grid-cols-2 gap-2.5">
                 {(
                   [
-                    { value: "google", label: "Google", icon: "🔍" },
-                    { value: "instagram", label: "Instagram", icon: "📸" },
-                    { value: "friend", label: "Friend", icon: "👥" },
-                    { value: "tour_guide", label: "Tour Guide", icon: "🗺️" },
+                    { value: "google" as ReferralSource, label: "Google", icon: faGoogle, color: "#4285F4" },
+                    { value: "instagram" as ReferralSource, label: "Instagram", icon: faInstagram, color: "#E1306C" },
+                    { value: "driver" as ReferralSource, label: "Driver", icon: faCar, color: undefined },
+                    { value: "facebook" as ReferralSource, label: "Facebook", icon: faFacebook, color: "#1877F2" },
                   ] as const
-                ).map(({ value, label, icon }) => (
+                ).map(({ value, label, icon, color }) => (
                   <button
                     key={value}
                     type="button"
@@ -165,8 +195,14 @@ export default function EmbedForm() {
                         : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
                     }`}
                   >
-                    <span className="text-lg">{icon}</span>
-                    <span className="text-xs text-center leading-tight">{label}</span>
+                    <FontAwesomeIcon
+                      icon={icon}
+                      className="w-6 h-6"
+                      style={form.referral_source !== value && color ? { color } : undefined}
+                    />
+                    <span className="text-xs text-center leading-tight">
+                      {label}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -183,7 +219,7 @@ export default function EmbedForm() {
               disabled={loading}
               className="w-full bg-amber-400 hover:bg-amber-500 disabled:bg-amber-400/50 text-zinc-900 font-semibold rounded-lg py-3.5 text-sm transition-colors mt-2 disabled:cursor-not-allowed"
             >
-              {loading ? "Sending..." : "Send Inquiry"}
+              {loading ? "Sending..." : "Chat Now!"}
             </button>
           </form>
         </div>
