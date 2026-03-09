@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import logo from '../logo.webp'
 
@@ -51,6 +51,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('admins')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.role === 'super_admin') setIsSuperAdmin(true)
+        })
+    })
+  }, [])
 
   async function handleSignOut() {
     setSigningOut(true)
@@ -73,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
+        {navItems.filter((item) => item.href !== '/admin/audit-log' || isSuperAdmin).map((item) => {
           const active = pathname === item.href
           return (
             <Link

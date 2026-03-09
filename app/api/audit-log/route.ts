@@ -8,8 +8,9 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const service = createServiceClient()
-    const { data: admin } = await service.from('admins').select('id').eq('id', user.id).single()
+    const { data: admin } = await service.from('admins').select('id, role').eq('id', user.id).single()
     if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (admin.role !== 'super_admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { data: logs, error } = await service
       .from('audit_logs')
