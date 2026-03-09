@@ -21,6 +21,7 @@ export interface Booking {
   whatsapp: string;
   source: string | null;
   booking_date: string | null;
+  booking_end_date: string | null;
   tattoo_description: string | null;
   deposit_amount: number | null;
   booking_status: BookingStatus;

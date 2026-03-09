@@ -25,6 +25,7 @@ interface BookingForm {
   whatsapp: string;
   source: string;
   booking_date: string;
+  booking_end_date: string;
   tattoo_description: string;
   deposit_amount: string;
   notes: string;
@@ -35,6 +36,7 @@ const emptyForm: BookingForm = {
   whatsapp: "",
   source: "",
   booking_date: "",
+  booking_end_date: "",
   tattoo_description: "",
   deposit_amount: "",
   notes: "",
@@ -191,6 +193,7 @@ export default function BookingsPage() {
       whatsapp: booking.whatsapp,
       source: booking.source ?? "",
       booking_date: booking.booking_date ?? "",
+      booking_end_date: booking.booking_end_date ?? "",
       tattoo_description: booking.tattoo_description ?? "",
       deposit_amount: booking.deposit_amount != null ? String(booking.deposit_amount) : "",
       notes: booking.notes ?? "",
@@ -210,6 +213,7 @@ export default function BookingsPage() {
           whatsapp: editForm.whatsapp,
           source: editForm.source || null,
           booking_date: editForm.booking_date || null,
+          booking_end_date: editForm.booking_end_date || null,
           tattoo_description: editForm.tattoo_description || null,
           deposit_amount: editForm.deposit_amount ? Number(editForm.deposit_amount) : null,
           notes: editForm.notes || null,
@@ -254,6 +258,7 @@ export default function BookingsPage() {
           whatsapp: form.whatsapp,
           source: form.source || null,
           booking_date: form.booking_date || null,
+          booking_end_date: form.booking_end_date || null,
           tattoo_description: form.tattoo_description || null,
           deposit_amount: form.deposit_amount
             ? Number(form.deposit_amount)
@@ -307,7 +312,8 @@ export default function BookingsPage() {
 
       if (dateFrom || dateTo) {
         if (!b.booking_date) return false;
-        if (dateFrom && b.booking_date < dateFrom) return false;
+        const bookingEnd = b.booking_end_date || b.booking_date;
+        if (dateFrom && bookingEnd < dateFrom) return false;
         if (dateTo && b.booking_date > dateTo) return false;
       }
 
@@ -331,6 +337,12 @@ export default function BookingsPage() {
       month: "short",
       year: "numeric",
     });
+  }
+
+  function formatDateRange(start: string | null, end: string | null) {
+    if (!start) return "—";
+    if (!end || end === start) return formatDate(start);
+    return `${formatDate(start)} – ${formatDate(end)}`;
   }
 
   function formatCurrency(val: number | null) {
@@ -604,8 +616,8 @@ export default function BookingsPage() {
                           ? (SOURCE_LABELS[booking.source] ?? booking.source)
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 hidden md:table-cell">
-                        {formatDate(booking.booking_date)}
+                      <td className="px-4 py-3 text-zinc-400 hidden md:table-cell whitespace-nowrap">
+                        {formatDateRange(booking.booking_date, booking.booking_end_date)}
                       </td>
                       <td className="px-4 py-3 text-zinc-400 max-w-40 truncate hidden lg:table-cell">
                         {booking.tattoo_description || "—"}
@@ -726,7 +738,7 @@ export default function BookingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Booking Date</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Start Date</label>
                   <input
                     type="date"
                     value={editForm.booking_date}
@@ -734,6 +746,16 @@ export default function BookingsPage() {
                     className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">End Date <span className="text-zinc-600">(leave blank for single-day)</span></label>
+                <input
+                  type="date"
+                  value={editForm.booking_end_date}
+                  min={editForm.booking_date || undefined}
+                  onChange={(e) => setEditForm({ ...editForm, booking_end_date: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1.5">Status</label>
@@ -888,7 +910,7 @@ export default function BookingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-                    Booking Date
+                    Start Date
                   </label>
                   <input
                     type="date"
@@ -899,6 +921,22 @@ export default function BookingsPage() {
                     className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+                  End Date{" "}
+                  <span className="text-zinc-600">(leave blank for single-day)</span>
+                </label>
+                <input
+                  type="date"
+                  value={form.booking_end_date}
+                  min={form.booking_date || undefined}
+                  onChange={(e) =>
+                    setForm({ ...form, booking_end_date: e.target.value })
+                  }
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 transition-colors"
+                />
               </div>
 
               <div>
